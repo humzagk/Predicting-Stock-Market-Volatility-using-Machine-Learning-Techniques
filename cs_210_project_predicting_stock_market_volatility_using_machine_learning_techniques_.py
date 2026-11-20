@@ -44,7 +44,8 @@ from scipy.stats import zscore
 data = pd.read_csv("data.csv")
 
 # Converting Date to datetime format
-data['Date'] = pd.to_datetime(data['Date'])
+# Dates appear as both 07/17/2023 and 07-12-2023 in the file
+data['Date'] = pd.to_datetime(data['Date'], format='mixed')
 
 # Cleaning the Close/Last, Open, High, Low columns to remove '$' and convert to numeric
 for col in ['Close/Last', 'Open', 'High', 'Low']:
@@ -120,7 +121,8 @@ import pandas as pd
 data = pd.read_csv("data.csv")
 
 # Converting Date to datetime format
-data['Date'] = pd.to_datetime(data['Date'])
+# Dates appear as both 07/17/2023 and 07-12-2023 in the file
+data['Date'] = pd.to_datetime(data['Date'], format='mixed')
 
 # Cleaning the Close/Last, Open, High, Low columns to remove '$' and convert to numeric
 for col in ['Close/Last', 'Open', 'High', 'Low']:
@@ -191,17 +193,31 @@ columns_to_convert = ['Close/Last', 'Open', 'High', 'Low']
 for col in columns_to_convert:
     data[col] = data[col].str.replace('$', '').astype(float)
 
-# Creating binary variable indicating if the next day's close is higher than the current day's
-data['Price_Up'] = data['Close/Last'].shift(-1) < data['Close/Last']
+# Converting Date and putting each company's rows in chronological order.
+# The file is ordered newest first, so the rows must be sorted before looking ahead.
+data['Date'] = pd.to_datetime(data['Date'], format='mixed')
+data = data.sort_values(['Company', 'Date']).reset_index(drop=True)
 
-# Dropping the company column (for simplicity in this example)
-data = data.drop(['Company', 'Date'], axis=1)
+# Label: does the NEXT trading day's close (same company) exceed today's close?
+data['Next_Close'] = data.groupby('Company')['Close/Last'].shift(-1)
+data = data.dropna(subset=['Next_Close'])  # each company's last day has no next day
+data['Price_Up'] = data['Next_Close'] > data['Close/Last']
 
-# Splitting data into train and test sets
-X = data.drop(['Price_Up'], axis=1)[:-1]  # Exclude last row as it does not have a label
-y = data['Price_Up'][:-1]  # Exclude last row as it does not have a label
+# Features: the current day's prices and volume only
+features = ['Close/Last', 'Volume', 'Open', 'High', 'Low']
+X = data[features]
+y = data['Price_Up']
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Chronological split: train on the earliest 80% of dates, test on the latest 20%,
+# so the model never sees days that come after the test period
+cutoff = data['Date'].quantile(0.8)
+train, test = data['Date'] <= cutoff, data['Date'] > cutoff
+X_train, X_test, y_train, y_test = X[train], X[test], y[train], y[test]
+print(f"Train: {train.sum()} rows up to {cutoff.date()}, test: {test.sum()} rows after")
+
+# Baseline: always predict the most common class in the training set
+majority = y_train.mode()[0]
+print("Baseline accuracy (always predict majority class):", (y_test == majority).mean())
 
 # Standardizing the features
 scaler = StandardScaler()
