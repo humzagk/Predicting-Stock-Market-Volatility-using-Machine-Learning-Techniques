@@ -1,45 +1,49 @@
-# Predicting-Stock-Market-Volatility-using-Machine-Learning-Techniques
+# Predicting Stock Market Volatility using Machine Learning Techniques
 
+Course project (CS 210). It analyses ten years of daily prices for ten large US stocks (AAPL, MSFT, AMZN, META, TSLA, NFLX, AMD, QCOM, CSCO and SBUX) to find out:
 
-Predicting Stock Market Volatility using Machine Learning Techniques
+- how volume and prices are distributed and correlated
+- which regression model predicts the closing price best
+- whether daily up/down moves can be classified
+- whether some companies show more consistent price patterns than others
 
-The dispersion of returns for a certain stock or market index is measured by stock market volatility. The stock market's volatility can serve as a predictor of both positive and negative trends. Fund managers, analysts, and investors are all quite interested in predicting these trends to base their investment decisions upon. However, as financial markets are complicated, predicting stock market volatility is a difficult undertaking, hence why using Machine Learning Methods can possibly prove to be a handy tool for determining stock trends. 
+It uses pandas, seaborn, scikit-learn (PCA, random forest, decision tree, KNN and logistic regression), SciPy and statsmodels.
 
-Dataset:  https://www.kaggle.com/datasets/camnugent/sandp500
-File Name:    (  all_stocks_5yr.csv  )
+> **Known issues.** The up/down classification in the notebook uses a label that looks at the previous day rather than the next day, so its 75-78% accuracy overstates predictive skill (see [#1](../../issues/1)). Some results quoted below come from an earlier version of the analysis and don't match the current notebook output (see [#3](../../issues/3)).
 
-Research Questions 
-How does the distribution of trading volume and stock prices (Close/Last, Open, High, Low) vary across the top 10 companies in the stock market, and how do these variables correlate with each other?
+## Dataset
 
-Which Machine Learning Model Can be best implemented to predict a stock's closing price?  
+[Stock Market Historical Data of Top 10 Companies](https://www.kaggle.com/datasets/khushipitroda/stock-market-historical-data-of-top-10-companies) on Kaggle, file `data.csv` (columns: `Company, Date, Close/Last, Volume, Open, High, Low`). The dataset isn't included in this repo.
 
-Do certain companies show a more consistent stock price pattern than others?
+## How to run
 
-Can we predict whether a stock will go up or down based on its previous day's features?
+```bash
+git clone https://github.com/humzagk/Predicting-Stock-Market-Volatility-using-Machine-Learning-Techniques.git
+cd Predicting-Stock-Market-Volatility-using-Machine-Learning-Techniques
+pip install -r requirements.txt jupyter
+# download data.csv from Kaggle into this folder, then:
+jupyter notebook CS_210_Project_Predicting_Stock_Market_Volatility_using_Machine_Learning_Techniques_.ipynb
+```
 
+You can also run the exported script directly with `python cs_210_project_predicting_stock_market_volatility_using_machine_learning_techniques_.py`. The full written report is in the `.docx` file.
 
+## Research questions
 
+1. How do trading volume and prices (Close/Last, Open, High, Low) vary across the ten companies, and how do they correlate?
+2. Which machine learning model best predicts a stock's closing price?
+3. Do certain companies show a more consistent stock price pattern than others?
+4. Can we classify whether a stock's close will rise or fall the next day from the current day's features?
 
-Research Question 1 Interpretations
+The sections below follow this order. In the notebook, questions 3 and 4 appear the other way round.
+
+## Findings
+
+### Research Question 1 Interpretations
 
 Descriptive Statistics: The table shows some basic statistics of the numerical columns in the dataset, broken down by the company. It provides the minimum, maximum, variance, and standard deviation of the volume, close/last, open, high, and low prices. This information gives an overview of the range and dispersion of each feature within each company's stock data.
 Correlation Matrix: The correlation matrix shows the pairwise Pearson correlation coefficients between the numerical features. This helps to identify the relationships between the features. In this case, the close/last, open, high, and low prices are highly positively correlated with each other (correlation coefficients close to 1), indicating that they move together. This is expected as the opening, closing, high, and low prices of a stock within a single day are typically closely related. The volume is negatively correlated with these features, which means that when the volume goes up, the prices tend to go down, and vice versa. However, it is important to note that the correlations are relatively weak and may not have strong predictive power on their own.
-As you have mentioned various machine learning concepts and models, you can consider the following approach to predict a stock's closing price:
-Data Preprocessing: Clean the data by handling missing values, outliers, and data type conversions if needed.
-Feature Engineering: Create new features or transform existing features that may help the models to better understand the underlying patterns. For example, you could create features that represent moving averages, volatility, or other technical indicators.
-Model Selection and Evaluation: Try different machine learning models, such as Random Forest, Decision Trees, KNN, and others. Evaluate the models using appropriate metrics, such as MSE or RMSE. Consider cross-validation to get a more robust estimate of model performance.
-Hyperparameter Tuning: Tune the hyperparameters of the models that perform well to improve their performance further.
-Model Interpretation: Interpret the models' predictions, feature importance, or coefficients to gain insights into the factors affecting stock prices.
-External Factors: Consider incorporating external factors, such as economic indicators or news sentiment, to improve prediction accuracy further.
-Remember that predicting stock prices is challenging due to the influence of various external factors and the inherent noise in financial markets.
 
-
-
-
-
-
-Research Question 2 
-
+### Research Question 2
 
 The results indicate that the best machine learning model for predicting the stock's closing price, based on the lowest Mean Squared Error (MSE), is the Random Forest model with an MSE of 12.90. The Decision Tree model had a higher MSE of 19.32, and the KNN model had a much higher MSE of 9690.12.
 The explained variance ratios from PCA show that the first principal component explains 100% of the variance in the data, and the remaining components have negligible contributions. This means that most of the variability in the data can be captured by the first principal component, and the other components do not add much value.
@@ -49,22 +53,17 @@ Random Forest: The Random Forest model, being an ensemble of decision trees, had
 Decision Tree: The Decision Tree model had a slightly higher MSE than the Random Forest model, indicating it may not be as effective in this particular case. However, decision trees are intuitive and easy to interpret, making them a good option for cases where interpretability is important.
 KNN: The K-Nearest Neighbors (KNN) model had a significantly higher MSE than the other models. This suggests that the KNN model is not suitable for this dataset or requires further parameter tuning. KNN can be sensitive to the scale of the features and the choice of the distance metric, so careful preprocessing and parameter selection are crucial.
 
-
 To sum up, the best model for predicting the stock's closing price, in this case, is the Random Forest model. However, it's essential to note that stock prices are influenced by various external factors, such as market sentiment, economic conditions, and company-specific news. Therefore, a more comprehensive analysis would consider these external factors and incorporate them into the model.
 
-
-
-Research Question 3 
-
+### Research Question 3
 
 Shapiro-Wilk Test: This test assesses whether the stock prices for each company follow a normal distribution. For all companies, the p-values are extremely low, indicating that the stock prices for these companies do not follow a normal distribution. Therefore, we reject the null hypothesis that the data is normally distributed.
 ANOVA p-value for mean differences: The p-value is 0.0, which is below the standard significance level of 0.05. This indicates that there are significant differences in the means of the stock prices across different companies.
 Bartlett's test p-value for variance differences: The p-value is 0.0, which is below the standard significance level of 0.05. This indicates that there are significant differences in the variances of the stock prices across different companies.
 Permutation test p-values: These p-values are obtained from permutation tests, which assess whether the observed differences in the stock prices across companies could have occurred by chance. The p-values for most companies are 0.0, indicating that the observed differences are not due to chance. One company has a p-value of 0.0073, which is still below the standard significance level of 0.05, indicating that the observed differences are not due to chance for that company as well.
-Power of the test: The power of the test is calculated as 0.7038, which is above the standard threshold of 0.8 for a test to be considered powerful. A power below 0.8 indicates that the test has a relatively high risk of failing to detect a true effect.
+Power of the test: The power of the test is calculated as 0.7038, which is below the conventional threshold of 0.8 for a test to be considered powerful. This indicates that the test has a relatively high risk of failing to detect a true effect.
 In conclusion, the analysis indicates that the stock prices of the different companies do not follow a normal distribution, and there are significant differences in both the means and variances of the stock prices across companies. The permutation tests further confirm that the observed differences are not due to chance. However, the power of the test is below the standard threshold, indicating that the test may have a relatively high risk of failing to detect a true effect.
 Overall, the results suggest that certain companies may have more consistent stock price patterns than others, as evidenced by the significant differences in means and variances. However, further analysis and additional data may be needed to confirm these findings and identify the specific companies with more consistent stock price patterns.
-
 
 AAPL (Apple) Model Summary:
 Dependent Variable: Close/Last (stock closing price)
@@ -91,7 +90,6 @@ Model Assumptions: For both companies, the assumption of normally distributed re
 Multicollinearity Warning: The high condition number for both stocks indicates potential multicollinearity. This could be due to other unconsidered factors that are influencing both the volume and closing price, and they should be investigated further.
 Overall, while these models provide some insight into the relationship between stock trading volume and closing price for Apple and Starbucks, there are violations of key assumptions that need to be addressed, possibly by including other relevant predictors or using more sophisticated modeling techniques.
 
-
 MSFT (Microsoft) Model Summary:
 Dependent Variable: Close/Last (stock closing price)
 R-squared: 0.012 - This means that only 1.2% of the variability in Microsoft's stock closing price can be explained by the Volume of stocks traded. This low value suggests that trading volume is not a strong predictor of the stock closing price.
@@ -116,9 +114,6 @@ Key Takeaways:
 		Model Assumptions: For both companies, the assumption of normally distributed residuals is violated (as indicated by Omnibus and Jarque-Bera tests). This could affect the reliability of the OLS estimates.
 		Multicollinearity Warning: The high condition numbers indicate potential multicollinearity. This could be due to other unconsidered factors that are influencing both the volume and closing price and should be investigated further.
 Overall, these models show some level of a negative relationship between stock trading volume and closing price for both Microsoft and Cisco. However, the models have limitations and do not capture a significant proportion of the variability in stock prices, implying that other factors aside from volume are likely playing a more significant role in determining stock prices.
-
-
-
 
 QCOM (Qualcomm) Model Summary:
 		Dependent Variable: Close/Last (stock closing price)
@@ -145,8 +140,6 @@ Key Takeaways:
 		Multicollinearity Warning: The high condition numbers indicate potential multicollinearity. This could be due to other unconsidered factors that are influencing both the volume and closing price and should be investigated further.
 Overall, these models show some level of a negative relationship between stock trading volume and closing price for both Qualcomm and Meta. As with the previous models, these models have limitations and do not capture a significant proportion of the variability in stock prices, implying that other factors aside from volume are likely playing a more significant role in determining stock prices.
 
-
-
 AMZN (Amazon) Model Summary:
 		Dependent Variable: Close/Last (stock closing price)
 		R-squared: 0.000 - This means that none of the variability in Amazon's stock closing price can be explained by the Volume of stocks traded. The R-squared value is essentially zero, indicating that trading volume has no explanatory power in this model.
@@ -172,10 +165,6 @@ Key Takeaways:
 		Multicollinearity Warning: The high condition numbers indicate potential multicollinearity. This could be due to other unconsidered factors that are influencing both the volume and closing price and should be investigated further.
 In conclusion, these models highlight that stock trading volume has limited predictive power for stock closing prices for both Amazon and Tesla. Other factors, not included in these models, are likely playing a more significant role in determining stock prices. Also, the violation of model assumptions (especially normality of residuals) and potential multicollinearity are areas of concern that need to be addressed for more reliable model results.
 
-
-
-
-
 AMD (Advanced Micro Devices) Model Summary:
 		Dependent Variable: Close/Last (stock closing price)
 		R-squared: 0.128 - This means that 12.8% of the variability in AMD's stock closing price is explained by the Volume of stocks traded. This indicates that trading volume explains a relatively small portion of the variability in the stock closing price.
@@ -200,9 +189,6 @@ Key Takeaways:
 		Model Assumptions: For both companies, the assumption of normally distributed residuals is violated (as indicated by Omnibus and Jarque-Bera tests). This could affect the reliability of the OLS estimates.
 		Multicollinearity Warning: The high condition numbers indicate potential multicollinearity. This could be due to other unconsidered factors that are influencing both the volume and closing price and should be investigated further.
 In conclusion, while trading volume appears to have a significant relationship with stock closing prices for both AMD and Netflix, it doesn't explain a large proportion of the variability in closing prices. Other factors, not included in these models, are likely playing a more significant role in determining stock prices. Also, the violation of model assumptions (especially normality of residuals) and potential multicollinearity are areas of concern that need to be addressed for more reliable model results
-
-
-
 
 For each stock, there are two rows of information: one for the constant term (intercept) and one for the volume.
 AAPL (Apple):
@@ -237,7 +223,6 @@ NFLX (Netflix):
 		Volume: We are 95% confident that the true value of the coefficient for Volume falls within the range [-0.000008, -0.000007].
 The above results show the ranges within which we can be 95% confident that the true values of the intercepts and coefficients for Volume lie for each of the ten stocks. These intervals give us an indication of the precision of our estimates and an understanding of the possible range of values that the coefficients can take in the population. This can be particularly useful for understanding the uncertainty associated with our regression estimates.
 
-
 Here are the key takeaways for all 10 stocks:
 Role of Volume: For most of the stocks (AAPL, SBUX, MSFT, CSCO, QCOM, META, AMZN, TSLA, NFLX), trading volume appears to be a statistically significant predictor of stock closing price. The relationship is negative for all these stocks except AMD, where volume has a positive relationship with the closing price. However, the explanatory power of volume is not very high for any of the stocks, as evidenced by the low R-squared values.
 Significance of the Models: The models for all ten stocks are statistically significant, as indicated by the low p-values for the F-statistics. However, the practical significance is limited due to the relatively low R-squared values. This suggests that other factors, not included in the models, are also influencing the closing prices.
@@ -247,36 +232,8 @@ Interpretation of Coefficients: The coefficients for the Volume variable are neg
 Confidence Intervals: The confidence intervals for the coefficients provide an estimate of the range within which the true value of the coefficient is likely to fall. For most of the stocks, the confidence intervals for the Volume coefficients are relatively narrow, indicating a high level of precision in the estimates.
 In conclusion, while trading volume appears to have a significant relationship with stock closing prices for all ten stocks, it doesn't explain a large proportion of the variability in closing prices. Other factors, not included in these models, are likely playing a more significant role in determining stock prices. Also, the violation of model assumptions (especially normality of residuals and potential autocorrelation) and potential multicollinearity are areas of concern that need to be addressed for more reliable model results.
 
+### Research Question 4
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Research Question 4
-
-
-
-As for the results you've posted, let's interpret them:
 Accuracy: 51.2% - This means that the model is correct 51.2% of the time in predicting whether a stock will go up or down. This is slightly better than random guessing but not much.
 Precision: 48.2% - This metric measures the proportion of positive identifications that were actually correct. In this case, it means that when the model predicts a stock will go up, it is correct 48.2% of the time.
 Recall: 48.1% - This metric measures the proportion of actual positives that were correctly identified. In this case, it means that the model correctly predicts 48.1% of the times when the stock actually goes up.
@@ -285,26 +242,7 @@ Feature Coefficients: The coefficients indicate the strength and direction of th
 ROC AUC Score: 49.9% - The Area Under the Receiver Operating Characteristic curve (ROC AUC) measures the ability of the model to distinguish between the classes. A score of 50% indicates no discriminative power, and the score you got is very close to that.
 Based on these results, the model doesn't seem to perform very well in predicting whether a stock will go up or down based on the previous day's features. It's important to note that predicting stock market movements is a complex task
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Interpretation of Research Questions
+### Interpretation of Research Questions
 		How does the distribution of trading volume and stock prices (Close/Last, Open, High, Low) vary across the top 10 companies in the stock market, and how do these variables correlate with each other?
 The distribution of trading volume and stock prices varied across the top 10 companies. Some companies exhibited higher average trading volume and stock prices than others.
 The correlation between trading volume and stock prices was weak for most companies. For the companies where there was a statistically significant relationship, the effect size was small, suggesting that trading volume does not play a significant role in determining stock prices for these companies.
@@ -319,8 +257,11 @@ Stocks with a more consistent pattern could be better suited for time series mod
 The logistic regression model showed limited success in predicting whether a stock will go up or down based on its previous day's features. The accuracy, precision, recall, and F1 score were all around 50%, which is equivalent to random guessing.
 The feature coefficients were small, suggesting a minimal effect of the previous day's features on the model's predictions.
 The results highlight the complexity of predicting stock price movements and the need for a comprehensive approach that considers additional features, more sophisticated models, and a larger dataset for better predictive performance.
-Closing
+### Closing
 In conclusion, predicting stock market volatility is a complex task that requires a multifaceted approach. Our analysis revealed that trading volume does not play a significant role in determining stock prices, and the patterns in stock prices varied across companies. The linear regression and logistic regression models had limited success in predicting stock closing prices and the direction of stock price movements, respectively.
 For better predictive performance, more sophisticated machine learning models, additional features, and larger datasets should be considered. Moreover, the impact of external factors such as market news, economic indicators, and geopolitical events on stock market volatility should also be taken into account.
 It is essential for investors to approach stock market investments with a comprehensive strategy, considering both quantitative analysis and qualitative insights, to make informed decisions and manage risks effectively.
 
+## License
+
+[MIT](LICENSE)
