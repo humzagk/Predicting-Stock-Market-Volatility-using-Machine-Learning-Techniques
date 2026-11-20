@@ -9,7 +9,7 @@ Course project (CS 210). It analyses ten years of daily prices for ten large US 
 
 It uses pandas, seaborn, scikit-learn (PCA, random forest, decision tree, KNN and logistic regression), SciPy and statsmodels.
 
-> **Known issues.** The up/down classification in the notebook uses a label that looks at the previous day rather than the next day, so its 75-78% accuracy overstates predictive skill (see [#1](../../issues/1)). Some results quoted below come from an earlier version of the analysis and don't match the current notebook output (see [#3](../../issues/3)).
+> **Note.** The up/down classification (notebook RQ3) was corrected in [#5](../../pull/5). It now uses each company's next-day close and a chronological train/test split, and the results below come from re-running the notebook on `data.csv`.
 
 ## Dataset
 
@@ -45,10 +45,12 @@ Correlation Matrix: The correlation matrix shows the pairwise Pearson correlatio
 
 ### Research Question 2
 
-The results indicate that the best machine learning model for predicting the stock's closing price, based on the lowest Mean Squared Error (MSE), is the Random Forest model with an MSE of 12.90. The Decision Tree model had a higher MSE of 19.32, and the KNN model had a much higher MSE of 9690.12.
-The explained variance ratios from PCA show that the first principal component explains 100% of the variance in the data, and the remaining components have negligible contributions. This means that most of the variability in the data can be captured by the first principal component, and the other components do not add much value.
+The results indicate that the best machine learning model for predicting the stock's closing price, based on the lowest Mean Squared Error (MSE), is the Random Forest model with an MSE of 12.95. The Decision Tree model had a higher MSE of 15.94, and the KNN model had a much higher MSE of 9690.13. (The random forest and decision tree are not seeded, so these two values vary slightly between runs.)
+
+*Caveat: the features are the same day's Open, High, Low and Volume, so this estimates the close from that day's trading range rather than forecasting it.*
+The explained variance ratios from PCA show that the first principal component explains 100% of the variance in the data, and the remaining components have negligible contributions. This is because the features were not standardised before PCA. Volume is in the tens of millions while prices are in the hundreds, so volume accounts for almost all of the raw variance and the first component is essentially the volume axis.
 Now, let's briefly discuss the insights obtained from the results:
-PCA: The results from PCA show that the first principal component captures most of the variability in the data. This suggests that the original features are highly correlated, and the first principal component is sufficient to represent the information contained in the dataset.
+PCA: Because of the unscaled volume column, the 100% figure reflects feature scale, not correlation between features. Standardising the features first (e.g. `StandardScaler`) would give a meaningful decomposition. This also explains the poor KNN result, since KNN distances are dominated by volume.
 Random Forest: The Random Forest model, being an ensemble of decision trees, had the best performance among the models tested. It tends to perform well in practice, handling non-linearities and interactions among features. Random Forests are less likely to overfit compared to individual decision trees and can handle a large number of features well.
 Decision Tree: The Decision Tree model had a slightly higher MSE than the Random Forest model, indicating it may not be as effective in this particular case. However, decision trees are intuitive and easy to interpret, making them a good option for cases where interpretability is important.
 KNN: The K-Nearest Neighbors (KNN) model had a significantly higher MSE than the other models. This suggests that the KNN model is not suitable for this dataset or requires further parameter tuning. KNN can be sensitive to the scale of the features and the choice of the distance metric, so careful preprocessing and parameter selection are crucial.
@@ -56,6 +58,8 @@ KNN: The K-Nearest Neighbors (KNN) model had a significantly higher MSE than the
 To sum up, the best model for predicting the stock's closing price, in this case, is the Random Forest model. However, it's essential to note that stock prices are influenced by various external factors, such as market sentiment, economic conditions, and company-specific news. Therefore, a more comprehensive analysis would consider these external factors and incorporate them into the model.
 
 ### Research Question 3
+
+*The Shapiro-Wilk, ANOVA, Bartlett, permutation and power results in this section come from the written report (`.docx`); that code is not in the notebook. The per-company regression R² values and confidence intervals further down match the notebook's RQ4 output. The F-statistics and residual diagnostics come from the full statsmodels summaries in the report.*
 
 Shapiro-Wilk Test: This test assesses whether the stock prices for each company follow a normal distribution. For all companies, the p-values are extremely low, indicating that the stock prices for these companies do not follow a normal distribution. Therefore, we reject the null hypothesis that the data is normally distributed.
 ANOVA p-value for mean differences: The p-value is 0.0, which is below the standard significance level of 0.05. This indicates that there are significant differences in the means of the stock prices across different companies.
@@ -234,13 +238,17 @@ In conclusion, while trading volume appears to have a significant relationship w
 
 ### Research Question 4
 
-Accuracy: 51.2% - This means that the model is correct 51.2% of the time in predicting whether a stock will go up or down. This is slightly better than random guessing but not much.
-Precision: 48.2% - This metric measures the proportion of positive identifications that were actually correct. In this case, it means that when the model predicts a stock will go up, it is correct 48.2% of the time.
-Recall: 48.1% - This metric measures the proportion of actual positives that were correctly identified. In this case, it means that the model correctly predicts 48.1% of the times when the stock actually goes up.
-F1 Score: 48.1% - The F1 Score is a measure of a model's accuracy that considers both precision and recall. It's a good way to measure a model's accuracy when the classes are imbalanced.
-Feature Coefficients: The coefficients indicate the strength and direction of the relationship between each feature and the target variable. However, the coefficients are quite small, suggesting that the features have a minimal effect on the model's predictions.
-ROC AUC Score: 49.9% - The Area Under the Receiver Operating Characteristic curve (ROC AUC) measures the ability of the model to distinguish between the classes. A score of 50% indicates no discriminative power, and the score you got is very close to that.
-Based on these results, the model doesn't seem to perform very well in predicting whether a stock will go up or down based on the previous day's features. It's important to note that predicting stock market movements is a complex task
+*Can we classify whether a stock's close will rise or fall the next day from the current day's features?* (In the notebook this is RQ3.)
+
+The label compares each company's next trading-day close with today's close. The model is trained on the earliest 80% of dates (up to 2021-07-14, 20,120 rows) and tested on the latest 20% (5,030 rows), using the current day's Close, Open, High, Low and Volume.
+
+| Model | Test accuracy |
+|---|---|
+| Baseline (always predict the majority class) | 50.3% |
+| Logistic regression | 50.1% |
+| Random forest | 50.8% |
+
+Both models perform at the level of the baseline. Logistic regression predicts "up" for most days (recall 0.86 for up, 0.13 for down), and the random forest spreads its feature importance almost evenly (about 0.19-0.22 each). The current day's prices and volume carry essentially no information about the next day's direction. That is consistent with the weak-form efficient-market view that daily price moves are close to unpredictable from past prices alone.
 
 ### Interpretation of Research Questions
 		How does the distribution of trading volume and stock prices (Close/Last, Open, High, Low) vary across the top 10 companies in the stock market, and how do these variables correlate with each other?
@@ -251,14 +259,13 @@ Linear Regression models showed limited success in predicting stock closing pric
 The models were further affected by violations of assumptions, including normality of residuals and potential multicollinearity. It is recommended to consider additional features in the model, perform transformation of the data, or try different machine learning models.
 For better predictive performance, more sophisticated models like Random Forest, XGBoost, or ARIMA models should be explored.
 		Do certain companies show a more consistent stock price pattern than others?
-Certain companies did show more consistent stock price patterns than others, as evidenced by the Autocorrelation Function (ACF) and Partial Autocorrelation Function (PACF) plots.
+Certain companies did show more consistent stock price patterns than others, as evidenced by the Autocorrelation Function (ACF) and Partial Autocorrelation Function (PACF) plots in the written report.
 Stocks with a more consistent pattern could be better suited for time series models like ARIMA or GARCH for predicting future stock prices or volatility.
-		Can we predict whether a stock will go up or down based on its previous day's features?
-The logistic regression model showed limited success in predicting whether a stock will go up or down based on its previous day's features. The accuracy, precision, recall, and F1 score were all around 50%, which is equivalent to random guessing.
-The feature coefficients were small, suggesting a minimal effect of the previous day's features on the model's predictions.
+		Can we predict whether a stock will go up or down the next day based on the current day's features?
+Neither logistic regression (50.1%) nor a random forest (50.8%) beat the 50.3% majority-class baseline on a chronological hold-out set, so the current day's features give no usable signal for the next day's direction.
 The results highlight the complexity of predicting stock price movements and the need for a comprehensive approach that considers additional features, more sophisticated models, and a larger dataset for better predictive performance.
 ### Closing
-In conclusion, predicting stock market volatility is a complex task that requires a multifaceted approach. Our analysis revealed that trading volume does not play a significant role in determining stock prices, and the patterns in stock prices varied across companies. The linear regression and logistic regression models had limited success in predicting stock closing prices and the direction of stock price movements, respectively.
+In conclusion, predicting stock market volatility is a complex task that requires a multifaceted approach. Our analysis revealed that trading volume does not play a significant role in determining stock prices, and the patterns in stock prices varied across companies. Volume-only linear regressions explained little of the closing price, and the next-day direction classifiers did no better than the baseline.
 For better predictive performance, more sophisticated machine learning models, additional features, and larger datasets should be considered. Moreover, the impact of external factors such as market news, economic indicators, and geopolitical events on stock market volatility should also be taken into account.
 It is essential for investors to approach stock market investments with a comprehensive strategy, considering both quantitative analysis and qualitative insights, to make informed decisions and manage risks effectively.
 
